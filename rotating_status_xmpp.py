@@ -86,9 +86,11 @@ def usage():
     print "Usage:"
     print "python rotating_status_xmpp.py <options>"
     print "\tOptions"
-    print "\t--jid=[Jabber ID] -j[Jabber ID]"
-    print "\t--password=[Password] -p[Password]"
-    print "\t--message=[Message] -m[Message]"
+    print "\t--jid= -j <Jabber ID>"
+    print "\t--password= -p <Password>"
+    print "\t--message= -m <Message>"
+    print "\t--status= -s [Status] one of 'away', 'chat', 'dnd', or 'xa'. Default is 'dnd'"
+    print "\t--lengthofDisplay= -l [characters to be displayed]"
     print "\t--help -h (Displays this message)"
         
 def connect():
