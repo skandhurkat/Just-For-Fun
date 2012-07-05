@@ -122,7 +122,7 @@ def loopDisplay():
                 sm = (charactersToDisplay-i)*" " + message[0:i]
             else:
                 sm = message[i-charactersToDisplay:i]
-            pres = xmpp.Presence(priority=5, show=Status, status=sm)
+            pres = xmpp.Presence(priority=127, show=Status, status=sm)
             cl.send(pres)
             sys.stdout.write(sm)
             sys.stdout.flush()
@@ -131,7 +131,7 @@ def loopDisplay():
                 return
             time.sleep(1)
             sys.stdout.write(charactersToDisplay*"\b"+charactersToDisplay*" "+charactersToDisplay*"\b")
-        pres = xmpp.Presence(priority=5, show=Status, status=sm)
+        pres = xmpp.Presence(priority=127, show=Status, status=sm)
         cl.send(pres)
         sys.stdout.write(sm)
         sys.stdout.flush()
