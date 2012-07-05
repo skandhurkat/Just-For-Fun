@@ -16,11 +16,11 @@
 
 
 
-# This program can be used to set a rotating status update in Google Talk.
+# This program can be used to set a rotating Status update in Google Talk.
 # Extremely useful if you do not wish to be disturbed.
 
 # Because the staus message updates every second, any friend who wishes to chat
-# with you will have his chat window flooded with your status updates, thereby
+# with you will have his chat window flooded with your Status updates, thereby
 # killing any desire he may have to chat with you.
 
 import sys, getpass, time, getopt, xmpp, msvcrt
@@ -28,7 +28,7 @@ import sys, getpass, time, getopt, xmpp, msvcrt
 message=""
 JabberID=""
 passwd=""
-status = "dnd"
+Status = "dnd"
 charactersToDisplay = 13
 cl=None
 jid=None
@@ -36,7 +36,7 @@ jid=None
 def main():
     global message, JabberID, passwd
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "j:p:m:s:l:h", ["jid=", "password=", "message=", "status=", "lengthofdisplay=","help"])
+        opts, args = getopt.getopt(sys.argv[1:], "j:p:m:s:l:h", ["jid=", "password=", "message=", "Status=", "lengthofdisplay=","help"])
     except getopt.GetoptError, err:
         print str(err)
         usage()
@@ -48,9 +48,9 @@ def main():
             passwd=a
         elif o in ("-m", "--message"):
             message=a
-        elif o in ("-s", "--status"):
-            status=a
-            if status not in ("away", "chat", "dnd", "xa"):
+        elif o in ("-s", "--Status"):
+            Status=a
+            if Status not in ("away", "chat", "dnd", "xa"):
                 print "Oops! Status must be one of 'away', 'chat', 'dnd', or 'xa'"
                 sys.exit(1)
         elif o in("-l", "--lengthofdisplay"):
@@ -82,14 +82,14 @@ def main():
     cl.disconnect()
 
 def usage():
-    print "rotating_status_xmpp.py"
+    print "rotating_Status_xmpp.py"
     print "Usage:"
-    print "python rotating_status_xmpp.py <options>"
+    print "python rotating_Status_xmpp.py <options>"
     print "\tOptions"
     print "\t--jid= -j <Jabber ID>"
     print "\t--password= -p <Password>"
     print "\t--message= -m <Message>"
-    print "\t--status= -s [Status] one of 'away', 'chat', 'dnd', or 'xa'. Default is 'dnd'"
+    print "\t--Status= -s [Status] one of 'away', 'chat', 'dnd', or 'xa'. Default is 'dnd'"
     print "\t--lengthofDisplay= -l [characters to be displayed]"
     print "\t--help -h (Displays this message)"
         
@@ -114,7 +114,7 @@ def authorise():
         print "Authenticated via", auth
 
 def loopDisplay():
-    global cl, message, charactersToDisplay, status
+    global cl, message, charactersToDisplay, Status
     sm = ""
     while True:
         for i in range (1, (len(message)+charactersToDisplay)):
@@ -122,18 +122,24 @@ def loopDisplay():
                 sm = (charactersToDisplay-i)*" " + message[0:i]
             else:
                 sm = message[i-charactersToDisplay:i]
-            pres = xmpp.Presence(priority=5, show=status, status=sm)
+            pres = xmpp.Presence(priority=5, show=Status, status=sm)
             cl.send(pres)
+            sys.stdout.write(sm)
+            sys.stdout.flush()
             if msvcrt.kbhit():
                 msvcrt.getch()
                 return
             time.sleep(1)
-        pres = xmpp.Presence(priority=5, show=status, status=sm)
+            sys.stdout.write(charactersToDisplay*"\b"+charactersToDisplay*" "+charactersToDisplay*"\b")
+        pres = xmpp.Presence(priority=5, show=Status, status=sm)
         cl.send(pres)
+        sys.stdout.write(sm)
+        sys.stdout.flush()
         if msvcrt.kbhit():
             msvcrt.getch()
             return
         time.sleep(1)
+        sys.stdout.write(charactersToDisplay*"\b"+charactersToDisplay*" "+charactersToDisplay*"\b")
 
 if __name__ == "__main__":
     main()
