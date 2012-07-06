@@ -224,49 +224,6 @@ bool keyMaker::interact()
 				cout << key_str;
 			}
 		}
-		// do
-		// {
-			// if(redraw) break;
-			// if(i != 4 && j != 4)
-				// console.set_cursor_pos(MID_X-19+i*11+j, MID_Y+4);
-			// ch = getch();
-			// if(ch >= '0' && ch <= '9' && i < 4)
-			// {
-				// cout << ch;
-				// inKey[i][j++] = ch;
-				// if(j == 4)
-				// {
-					// inKey[i++][j] = '\0';
-					// j = 0;
-				// }
-			// }
-			// else if(ch == '\b')
-			// {
-				// if(j == 0 && i == 0)
-					// cout << '\a';
-				// else if(j == 0)
-				// {
-					// j = 3;
-					// i--;
-					// console.set_cursor_pos(MID_X-19+i*11+j, MID_Y+4);
-					// cout << " \b";
-				// }
-				// else
-				// {
-					// j--;
-					// cout << "\b \b";
-				// }
-			// }
-			// else if(ch == ESC)
-			// {
-				// redraw = true;
-				// break;
-			// }
-			// else if(ch == ENTER)
-				// if(i == 4 && j == 0)
-					// break;
-				// else cout << '\a';
-		// }while(true);
 	}while(redraw);
 	
 	return true;
