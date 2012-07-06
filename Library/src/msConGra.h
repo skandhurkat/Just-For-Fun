@@ -1,5 +1,6 @@
 //msConGra.h
 //Contains the graphic routines.
+//Based on the library by Robert Lafore in "Object Oriented Programming in C++"
 
 #if !defined _INC_MSCONGRA
 #define _INC_MSCONGRA

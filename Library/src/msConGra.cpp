@@ -1,5 +1,6 @@
 //msConGra.cpp
 //Contains function definitions for msConGra.cpp
+//Based on the library by Robert Lafore in "Object Oriented Programming in C++"
 
 #include "msConGra.h"
 

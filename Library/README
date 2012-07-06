@@ -1,0 +1,13 @@
+This is a program that I wrote in 2008. The program is to manage a library (of books).
+
+This is free software, hereby made available under the terms of the GNU GPL v3, or
+(at your option) any higher version of the GNU GPL.
+
+Unfortunately, the graphics routines used in this program are available only for Windows.
+In case you know of a similar library to use in Linux or any other *nix systems, please feel
+free to submit a patch. I believe that ncurses could be used, but I'm in no mood to modify
+this program any further.
+
+Some changes are being made from the original version in 2008. The newer version uses
+autoconf to compile and uses the MinGW compiler to compile. We have moved away from the original
+Microsoft Visual Studio compiler.
