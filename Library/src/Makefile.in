@@ -32,7 +32,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = Library$(EXEEXT) Keymaker$(EXEEXT)
+bin_PROGRAMS = Library$(EXEEXT) KeyMaker$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -45,10 +45,10 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_Keymaker_OBJECTS = MsConGra.$(OBJEXT) KeyMaker_MakeKey.$(OBJEXT) \
+am_KeyMaker_OBJECTS = MsConGra.$(OBJEXT) KeyMaker_MakeKey.$(OBJEXT) \
 	MakeKey.$(OBJEXT)
-Keymaker_OBJECTS = $(am_Keymaker_OBJECTS)
-Keymaker_LDADD = $(LDADD)
+KeyMaker_OBJECTS = $(am_KeyMaker_OBJECTS)
+KeyMaker_LDADD = $(LDADD)
 am_Library_OBJECTS = MsConGra.$(OBJEXT) KeyMaker.$(OBJEXT) \
 	Library.$(OBJEXT) LibApp.$(OBJEXT)
 Library_OBJECTS = $(am_Library_OBJECTS)
@@ -66,8 +66,8 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(Keymaker_SOURCES) $(Library_SOURCES)
-DIST_SOURCES = $(Keymaker_SOURCES) $(Library_SOURCES)
+SOURCES = $(KeyMaker_SOURCES) $(Library_SOURCES)
+DIST_SOURCES = $(KeyMaker_SOURCES) $(Library_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -155,7 +155,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 Library_SOURCES = MsConGra.h MsConGra.cpp KeyMaker.h KeyMaker.cpp Library.h Library.cpp LibApp.cpp
-Keymaker_SOURCES = MsConGra.h MsConGra.cpp KeyMaker.h KeyMaker_MakeKey.cpp MakeKey.cpp
+KeyMaker_SOURCES = MsConGra.h MsConGra.cpp KeyMaker.h KeyMaker_MakeKey.cpp MakeKey.cpp
 all: all-am
 
 .SUFFIXES:
@@ -227,9 +227,9 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-Keymaker$(EXEEXT): $(Keymaker_OBJECTS) $(Keymaker_DEPENDENCIES) 
-	@rm -f Keymaker$(EXEEXT)
-	$(CXXLINK) $(Keymaker_OBJECTS) $(Keymaker_LDADD) $(LIBS)
+KeyMaker$(EXEEXT): $(KeyMaker_OBJECTS) $(KeyMaker_DEPENDENCIES) 
+	@rm -f KeyMaker$(EXEEXT)
+	$(CXXLINK) $(KeyMaker_OBJECTS) $(KeyMaker_LDADD) $(LIBS)
 Library$(EXEEXT): $(Library_OBJECTS) $(Library_DEPENDENCIES) 
 	@rm -f Library$(EXEEXT)
 	$(CXXLINK) $(Library_OBJECTS) $(Library_LDADD) $(LIBS)
