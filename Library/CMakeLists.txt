@@ -1,0 +1,6 @@
+cmake_minimum_required (VERSION 2.6)
+project (Library)
+add_executable (Library src/MsConGra.h src/MsConGra.cpp src/KeyMaker.h src/KeyMaker.cpp src/Library.h src/Library.cpp src/LibApp.cpp)
+add_executable (KeyMaker src/MsConGra.h src/MsConGra.cpp src/KeyMaker.h src/KeyMaker_MakeKey.cpp src/MakeKey.cpp)
+install (TARGETS Library KeyMaker DESTINATION bin)
+install (FILES src/Application.sif src/Books.dat src/Members.dat DESTINATION bin)
