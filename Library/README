@@ -11,3 +11,4 @@ this program any further.
 Some changes are being made from the original version in 2008. The newer version uses
 autoconf to compile and uses the MinGW compiler to compile. We have moved away from the original
 Microsoft Visual Studio compiler.
+UPDATE: The system can also be compiled using CMake
