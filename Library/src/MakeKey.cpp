@@ -17,7 +17,7 @@
 // along with Library.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <conio.h>
-#include "keymaker.h"
+#include "KeyMaker.h"
 
 int main()
 {   
