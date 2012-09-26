@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Rotating Status Message
 # Copyright Skand Hurkat, 2012
 
