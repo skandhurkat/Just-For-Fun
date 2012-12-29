@@ -1,0 +1,10 @@
+This is a set of codes used to test functionality in C++11.
+The codes have been written to be as cross-platform as possible, and
+can be compiled using CMake.
+I have tested the codes on GCC 4.6 and 4.7, and on Visual Studio 2012.
+The codes do not work, yet, on MinGW systems because threads are not yet
+supported in MinGW (though I believe that some patches are available
+for MinGW32)
+
+- microcounter is a simple counter benchmark used to test threads
+- pnqueens is a parallel implementation of the n queens problem
