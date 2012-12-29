@@ -5,15 +5,19 @@
 
 ******************************************************************/
 
-MAIN_ENV
-
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <vector>
 // required for abs function
-#include <stdlib.h>
+#include <cstdlib>
 // required for memcpy function
-#include <string.h>
+#include <cstring>
 // for limits
 #include <limits.h>
 #include <inttypes.h>
+#include <assert.h>
+using namespace std;
 
 // Define a bunch of bit level macros
 #define BIT_VECTOR uint64_t
@@ -35,7 +39,7 @@ typedef struct {
   uint64_t num_sol;
   int best_prof;
   BIT_VECTOR best_sol[MAX_SIZE];
-  LOCKDEC(lock);
+  mutex lck;
 } GM;
 
 GM *gm;
@@ -112,15 +116,13 @@ void pnqueens(void)
   BIT_VECTOR soln[MAX_SIZE+3];
   BIT_VECTOR best_sol[MAX_SIZE];
   int n = gm->n;
-  int i;
-  int row;
   uint64_t num_sol = 0;
   int best_prof = 0;
   int atTheCorner = 0;
   BIT_VECTOR halfway = __BV(n>>1);
   while(1)
   {
-    LOCK(gm->lock);
+    gm->lck.lock();
     if(gm->taskQueueEmpty)
     {
       if(best_prof > gm->best_prof)
@@ -131,7 +133,7 @@ void pnqueens(void)
       if(!atTheCorner)
         num_sol <<= 1;
       gm->num_sol += num_sol;
-      UNLOCK(gm->lock);
+      gm->lck.unlock();
       break;
     }
     else
@@ -146,8 +148,8 @@ void pnqueens(void)
         num_sol <<= 1;
       }
     }
-    UNLOCK(gm->lock);
-    recurse_down(n, &num_sol, &best_prof, &best_sol, &soln,
+    gm->lck.unlock();
+    recurse_down(n, &num_sol, &best_prof, best_sol, soln,
         PERM_FIXED_ELEMENTS);
   }
 }
@@ -233,7 +235,6 @@ inline void recurse_down(int n, uint64_t* num_sol, int* best_prof,
 
 void print_sol(int n, BIT_VECTOR *sol) {
   int i, j;
-  BIT_VECTOR row;
 
   for (i = 0; i < n; i++) {
     for (j = 0; j < n; j++) {
@@ -251,17 +252,15 @@ void print_sol(int n, BIT_VECTOR *sol) {
 int main(int argc, char **argv) {
   int n, p;
   
-  unsigned int t1, t2;
+  clock_t t1, t2;
   BIT_VECTOR temp;
-
-  MAIN_INITENV
 
   if (argc != 3) {
     printf("Usage: pnqueens <# proc> <size>\nAborting...\n");
     exit(1);
   }
   
-  gm = (GM *) G_MALLOC(sizeof(GM));
+  gm = new GM;
 
   p = gm->p = atoi(argv[1]);
   n = gm->n = atoi(argv[2]);
@@ -275,8 +274,6 @@ int main(int argc, char **argv) {
   gm->num_sol = 0;
   gm->taskQueueEmpty = 0;
 
-  LOCKINIT(gm->lock);
-
   int i, row;
   for(i=0; i<PERM_FIXED_ELEMENTS+3; i++)
     gm->sol[i] = 0;
@@ -284,6 +281,10 @@ int main(int argc, char **argv) {
     gm->best_sol[i] = 0;
   for(i=0; i<PERM_FIXED_ELEMENTS; i++)
     gm->iStack[i] = 0;
+
+  vector<thread> threadGroup;
+
+  t1 = clock();
 
   i = 0; row = 0;
   while(1)
@@ -321,27 +322,31 @@ int main(int argc, char **argv) {
     else break;
   }
 
-  CLOCK(t1)
-
-  for (i = 0; i < p - 1; i++) 
-    CREATE(pnqueens)
+  for (i = 0; i < p-1; i++) 
+    threadGroup.push_back(thread(pnqueens));
  
   pnqueens();
-  WAIT_FOR_END(p - 1)
-  CLOCK(t2)
 
-  
-  printf("Elapsed            : %u microseconds\n", t2 - t1);
-  printf("N                  : %d\n", gm->n);
-  printf("Number of solutions: %u\n", gm->num_sol);
-  printf("Best profit        : %d\n", gm->best_prof);
-  printf("# of cores         : %d\n", p);
+  auto currentThread = threadGroup.begin();
+  while(currentThread != threadGroup.end())
+  {
+    currentThread->join();
+    currentThread++;
+  }
+
+  t2 = clock();
+
+  cout << "Elapsed            : " << (t2-t1)/CLOCKS_PER_SEC << " seconds" 
+       << endl
+       << "N                  : " << gm->n << endl
+       << "Number of solutions: " << gm->num_sol << endl
+       << "Best profit        : " << gm->best_prof << endl
+       << "# of cores         : " << p << endl;
 
   // do not print solution if there isn't any
   if (gm->num_sol)
     print_sol(n, gm->best_sol);
-
-  MAIN_END
+  delete gm;
 
   return 0;
 }
