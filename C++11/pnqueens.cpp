@@ -15,14 +15,26 @@
 #include <cstring>
 // for limits
 #include <limits.h>
+#ifdef _MSC_VER
+#include <cstdint>
+#else
 #include <inttypes.h>
+#endif
 #include <assert.h>
+#ifdef _MSC_VER
+static unsigned long __builtin_ctz(uint64_t x)
+{
+	unsigned long r;
+	_BitScanForward64(&r, x);
+	return r;
+}
+#endif
 using namespace std;
 
 // Define a bunch of bit level macros
 #define BIT_VECTOR uint64_t
 #define MAX_SIZE 32
-#define __BV(x) (1<<(x))
+#define __BV(x) (uint64_t(1)<<(x))
 #define SET_BIT(x,b) x |= (b)
 #define GET_BIT(x,b) (x&(b))
 #define RESET_BIT(x,b) x&=~(b)
@@ -327,12 +339,8 @@ int main(int argc, char **argv) {
  
   pnqueens();
 
-  auto currentThread = threadGroup.begin();
-  while(currentThread != threadGroup.end())
-  {
-    currentThread->join();
-    currentThread++;
-  }
+  for(thread& t : threadGroup)
+	  t.join();
 
   t2 = clock();
 
