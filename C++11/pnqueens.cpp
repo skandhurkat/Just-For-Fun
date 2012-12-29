@@ -15,11 +15,7 @@
 #include <cstring>
 // for limits
 #include <limits.h>
-#ifdef _MSC_VER
 #include <cstdint>
-#else
-#include <inttypes.h>
-#endif
 #include <assert.h>
 #ifdef _MSC_VER
 static unsigned long __builtin_ctz(uint64_t x)
