@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.10)
+cmake_minimum_required(VERSION 2.8)
 project(Just-For-Fun-CXX11)
 
 include(CheckCXXCompilerFlag)
@@ -6,16 +6,17 @@ include(CheckCXXCompilerFlag)
 find_package(Threads REQUIRED)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
+  execute_process(
+      COMMAND g++ -dumpversion
+      OUTPUT_VARIABLE CMAKE_CXX_COMPILER_VERSION
+      )
   if(CMAKE_CXX_COMPILER_VERSION GREATER 4.7 OR
      CMAKE_CXX_COMPILER_VERSION EQUAL 4.7)
-	message(STATUS "G++ 4.7 or higher detected")
-    #add_definitions("-std=c++11")
-	set(CMAKE_CXX_FLAGS "-std=c++11")
+  add_definitions("-std=c++11")
   else()
     check_cxx_compiler_flag("-std=c++0x" CXX0x_SUPPORTED)
 	if(CXX0x_SUPPORTED)
-      #add_definitions("-std=c++0x")
-	  set(CMAKE_CXX_FLAGS "-std=c++0x")
+    add_definitions("-std=c++0x")
 	else()
 	  message(FATAL_ERROR 
 	  "Compiler does not support -std=c++0x. This project requires C++11")
@@ -25,7 +26,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -g -pg")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O4")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O4 -g -pg")
-  message(STATUS "CXX flags: ${CMAKE_CXX_FLAGS}")
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
   check_cxx_compiler_flag("-stdlib=libc++" CXX0x_SUPPORTED)
   if(CXX0x_SUPPORTED)
