@@ -1,6 +1,6 @@
-//KeyMaker.h
-//Contains keyMaker class for checking license key.
-//© Skand Hurkat, 2012
+// KeyMaker.h
+// Contains keyMaker class for checking license key.
+// Copyright 2008, 2012 Skand Hurkat
 
 // This file is part of Library.
 

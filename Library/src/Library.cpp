@@ -1,6 +1,6 @@
-//Library.cpp
-//Contains definitions for Library.h
-//© Skand Hurkat, 2012
+// Library.cpp
+// Contains definitions for Library.h
+// Copyright 2008, 2012 Skand Hurkat and Aravindh Mahendran
 
 // This file is part of Library.
 

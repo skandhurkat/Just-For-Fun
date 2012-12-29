@@ -1,5 +1,5 @@
-//MakeKey.cpp
-//© Skand Hurkat, 2012
+// MakeKey.cpp
+// Copyright 2008, 2012 Skand Hurkat
 
 // This file is part of Library.
 

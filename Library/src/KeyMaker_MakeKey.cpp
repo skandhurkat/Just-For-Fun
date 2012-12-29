@@ -1,6 +1,6 @@
-//KeyMaker_MakeKey.cpp
-//Contains function definitions for KeyMaker.h
-//© Skand Hurkat, 2012
+// KeyMaker_MakeKey.cpp
+// Contains function definitions for KeyMaker.h
+// Copyright 2008, 2012 Skand Hurkat
 
 // This file is part of Library.
 

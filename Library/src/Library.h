@@ -1,6 +1,6 @@
-//Library.h
-//Contains class declarations required for the program.
-//© Skand Hurkat, 2012
+// Library.h
+// Contains class declarations required for the program.
+// Copyright 2008, 2012 Skand Hurkat and Aravindh Mahendran
 
 // This file is part of Library.
 

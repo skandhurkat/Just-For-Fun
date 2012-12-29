@@ -1,7 +1,7 @@
 /******************************************************************
   pnqueens.C - N-Queens parallel implementation
 
-  (c) Skand Hurkat & Berkin Ilbeyi, 2012
+  Copyright 2012 Skand Hurkat and Berkin Ilbeyi
 
 ******************************************************************/
 
