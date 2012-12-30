@@ -19,25 +19,35 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
+#include <cstdint>
+#include <cstdlib>
+
+// required for multithreading
 #include <thread>
 #include <mutex>
 #include <vector>
-// required for abs function
-#include <cstdlib>
+
 // required for memcpy function
 #include <cstring>
-// for limits
+
+// required for clock functions
+#include <ctime>
+#include <ratio>
+#include <chrono>
+
 #include <limits.h>
-#include <cstdint>
 #include <assert.h>
+
 #ifdef _MSC_VER
-static unsigned long __builtin_ctz(uint64_t x)
+// __builtin_ctz is a GNU concept. The equivalent in MSVC is _BitScanForward
+static inline unsigned long __builtin_ctz(uint64_t x)
 {
-	unsigned long r;
-	_BitScanForward64(&r, x);
-	return r;
+  unsigned long r;
+  _BitScanForward64(&r, x);
+  return r;
 }
 #endif
+
 using namespace std;
 
 // Define a bunch of bit level macros
@@ -45,7 +55,7 @@ using namespace std;
 #define MAX_SIZE 32
 #define __BV(x) (uint64_t(1)<<(x))
 #define SET_BIT(x,b) x |= (b)
-#define GET_BIT(x,b) (x&(b))
+#define GET_BIT(x,b) ((x)&(b))
 #define RESET_BIT(x,b) x&=~(b)
 
 // number of elements that are fixed per core
@@ -53,6 +63,7 @@ using namespace std;
 #define PERM_FIX_ELEMENTS PERM_FIXED_ELEMENTS
 
 typedef struct {
+  // global memory structure
   int n, p;
   BIT_VECTOR sol[PERM_FIX_ELEMENTS+3];
   int iStack[PERM_FIX_ELEMENTS];
@@ -66,6 +77,7 @@ typedef struct {
 GM *gm;
 
 // Tiny backtracking algorithm to get the next element from the task queue
+// Note: Locks handled by calling function
 inline void __pull_from_task_queue(BIT_VECTOR* soln)
 {
   memcpy(soln,gm->sol,PERM_FIXED_ELEMENTS*sizeof(BIT_VECTOR));
@@ -94,8 +106,8 @@ inline void __pull_from_task_queue(BIT_VECTOR* soln)
       {
         if(row == 0 && i > halfway) break;
         temp = (~((gm->sol[PERM_FIXED_ELEMENTS])|
-              ((gm->sol[PERM_FIXED_ELEMENTS+1])>>(n-1-row))|
-              ((gm->sol[PERM_FIXED_ELEMENTS+2])>>row)))&
+          ((gm->sol[PERM_FIXED_ELEMENTS+1])>>(n-1-row))|
+          ((gm->sol[PERM_FIXED_ELEMENTS+2])>>row)))&
           ((BIT_VECTOR)(-1)<<i)&((1<<n)-1);
         SET_BIT(temp,__BV(n));
         i = __builtin_ctz(temp);
@@ -130,7 +142,7 @@ inline void __pull_from_task_queue(BIT_VECTOR* soln)
 }
 
 inline void recurse_down(int n, uint64_t* num_sol, int* best_prof, 
-    BIT_VECTOR* best_sol, BIT_VECTOR* soln, int gRow);
+                         BIT_VECTOR* best_sol, BIT_VECTOR* soln, int gRow);
 
 void pnqueens(void)
 {
@@ -171,12 +183,12 @@ void pnqueens(void)
     }
     gm->lck.unlock();
     recurse_down(n, &num_sol, &best_prof, best_sol, soln,
-        PERM_FIXED_ELEMENTS);
+      PERM_FIXED_ELEMENTS);
   }
 }
 
 inline void recurse_down(int n, uint64_t* num_sol, int* best_prof,
-    BIT_VECTOR* best_sol, BIT_VECTOR* soln, int gRow)
+                         BIT_VECTOR* best_sol, BIT_VECTOR* soln, int gRow)
 {
   int iStack[MAX_SIZE];
   register int i;
@@ -272,15 +284,14 @@ void print_sol(int n, BIT_VECTOR *sol) {
 
 int main(int argc, char **argv) {
   int n, p;
-  
-  clock_t t1, t2;
+
   BIT_VECTOR temp;
 
   if (argc != 3) {
     printf("Usage: pnqueens <# proc> <size>\nAborting...\n");
     exit(1);
   }
-  
+
   gm = new GM;
 
   p = gm->p = atoi(argv[1]);
@@ -305,7 +316,7 @@ int main(int argc, char **argv) {
 
   vector<thread> threadGroup;
 
-  t1 = clock();
+  chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
 
   i = 0; row = 0;
   while(1)
@@ -315,8 +326,8 @@ int main(int argc, char **argv) {
       for(i = gm->iStack[row]; i < n; i++)
       {
         temp = (~((gm->sol[PERM_FIXED_ELEMENTS])|
-              ((gm->sol[PERM_FIXED_ELEMENTS+1])>>(n-1-row))|
-              ((gm->sol[PERM_FIXED_ELEMENTS+2])>>row)))&
+          ((gm->sol[PERM_FIXED_ELEMENTS+1])>>(n-1-row))|
+          ((gm->sol[PERM_FIXED_ELEMENTS+2])>>row)))&
           ((BIT_VECTOR)(-1)<<i)&((1<<n)-1);
         SET_BIT(temp,__BV(n));
         i = __builtin_ctz(temp);
@@ -345,20 +356,21 @@ int main(int argc, char **argv) {
 
   for (i = 0; i < p-1; i++) 
     threadGroup.push_back(thread(pnqueens));
- 
+
   pnqueens();
 
   for(thread& t : threadGroup)
-	  t.join();
+    t.join();
 
-  t2 = clock();
+  chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
+  chrono::duration<double> time_span = 
+    chrono::duration_cast<chrono::duration<double>>(t2-t1);
 
-  cout << "Elapsed            : " << (t2-t1)/CLOCKS_PER_SEC << " seconds" 
-       << endl
+  cout << "Elapsed            : " << time_span.count() << " seconds" << endl
        << "N                  : " << gm->n << endl
        << "Number of solutions: " << gm->num_sol << endl
        << "Best profit        : " << gm->best_prof << endl
-       << "# of cores         : " << p << endl;
+       << "Number of threads  : " << p << endl;
 
   // do not print solution if there isn't any
   if (gm->num_sol)
