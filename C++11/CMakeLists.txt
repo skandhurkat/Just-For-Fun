@@ -16,7 +16,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   else()
 	  message(FATAL_ERROR 
 	  "This project requires g++ 4.7 or higher")
-	endif()
   endif()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -g -pg")
