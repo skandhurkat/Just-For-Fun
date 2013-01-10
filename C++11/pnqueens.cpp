@@ -146,8 +146,8 @@ inline void recurse_down(int n, uint64_t* num_sol, int* best_prof,
 
 void pnqueens(void)
 {
-  BIT_VECTOR soln[MAX_SIZE+3];
-  BIT_VECTOR best_sol[MAX_SIZE];
+  BIT_VECTOR soln[MAX_SIZE+3] = {0};
+  BIT_VECTOR best_sol[MAX_SIZE] = {0};
   int n = gm->n;
   uint64_t num_sol = 0;
   int best_prof = 0;
