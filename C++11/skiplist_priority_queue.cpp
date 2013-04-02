@@ -32,7 +32,9 @@ struct skiplist_node
   skiplist_node** succs_alt;
   skiplist_node** preds_alt;
   mutex lock_node;
-  skiplist_node(): top_level = 0;
+  bool is_start_node;
+  bool is_end_node;
+  skiplist_node(): top_level(0), is_start_node(false), is_end_node(false)
   {
     if(MAX_LEVEL==0)
       throw std::bad_alloc();
@@ -63,43 +65,101 @@ public:
   skiplist_priority_queue(size_t MAX_LEVEL): head(nullptr), tail(nullptr)
   {
     skiplist_node::MAX_LEVEL = MAX_LEVEL;
+    head = new skiplist_node();
+    tail = new skiplist_node();
+    head->is_start_node = true;
+    tail->is_end_node = true;
+    head->top_level = skiplist_node::MAX_LEVEL;
+    tail->top_level = skiplist_node::MAX_LEVEL;
+    for(node* pred = *head->preds; pred < *head->preds+head->top_level;
+        pred++)
+      pred = nullptr;
+    for(node* succ = *head->succs; succ < *head->succs+head->top_level;
+        succ++)
+      succ = tail;
+    for(node* pred = *tail->preds; pred < *tail->preds+tail->top_level;
+        pred++)
+      pred = head;
+    for(node* succ = *tail->succs; succ < *tail->succs+tail->top_level;
+        succ++)
+      succ = nullptr;
+  }
+  ~skiplist_priority_queue()
+  {
+    node* curr;
+    while(head != nullptr)
+    {
+      curr = head->succs[0];
+      delete head;
+      head = curr;
+    }
   }
   void push(T& data)
   {
     skiplist_node* node = new skiplist_node();
     node->data = data;
+    node->lock_node.lock();
     node->top_level = rand() % skiplist_node::MAX_LEVEL;
-    node* curr = head;
-    node* next = head;
-    if(head == nullptr)
+    int curr_level = node->top_level-1;
+    while(curr_level >= 0)
     {
-      head = node;
-      for(size_t lvl = 0; lvl < node->top_level; lvl++)
-      {
-        node->preds = nullptr;
-        node->succs = nullptr;
-      }
+      node->preds[curr_level] = head;
+      node->succs[curr_level] = head->succs[curr_level];
+      curr_level--;
     }
-    else
+    node* curr = head;
+    curr->lock_node.lock();
+    node* next = head->succs[0];
+    next->lock_node.lock();
+    while(not next->is_end_node and node->data < next->data)
     {
-      while(node->data < curr->data)
+      curr->lock_node.unlock();
+      curr = next;
+      next = *curr->succs+curr->top_level-1;
+      next->lock_node.lock();
+      curr_level = curr->top_level-1;
+      // TODO: Fix order of locks, and locking mechanism
+      while(next >= *curr->succs)
       {
-        curr = next;
-        next = curr->succs+curr->top_level;
-        for(; next < curr->succs; next--)
+        if(not next->is_end_node and node->data < next->data)
+          break;
+        else
         {
-          if(node->data < next->data)
-            break;
+          node->preds[curr_level] = curr;
+          node->succs[curr_level] = next;
+          curr_level--;
         }
+        next--;
       }
-      // At this point, we know where we must insert the node. Question is:
-      // how do we insert the node?
+      while(curr_level >= 0)
+      {
+        node->preds[curr_level] = curr;
+        node->succs[curr_level] = curr->succs[curr_level];
+        curr_level--;
+      }
     }
   }
   T& top()
   {
+    return head->succs[0]->data;
   }
   void pop()
   {
+    head->lock_node.lock();
+    node* temp = head->succs[0];
+    temp->lock_node.lock();
+    for(size_t i = 0; i < temp->top_level; i++)
+    {
+      temp->succs[i]->lock_node.lock();
+      head->succs[i] = temp->succs[i];
+      head->succs[i]->preds[i] = head;
+    }
+    head->lock_node.unlock();
+    for(size_t i = 0; i < temp->top_level; i++)
+    {
+      temp->succs[i]->lock_node.unlock();
+    }
+    temp->lock_node.unlock();
+    delete temp;
   }
 };
