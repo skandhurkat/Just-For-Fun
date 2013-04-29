@@ -51,42 +51,43 @@ struct skiplist_node
     delete[] preds_alt;
   }
 };
-skiplist_node::MAX_LEVEL = 0;
+template <typename T>
+size_t skiplist_node<T>::MAX_LEVEL = 0;
 
 template <typename T>
 class skiplist_priority_queue
 {
 private:
-  skiplist_node* head;
-  skiplist_node* tail;
+  skiplist_node<T>* head;
+  skiplist_node<T>* tail;
 
 public:
   skiplist_priority_queue() = delete;
   skiplist_priority_queue(size_t MAX_LEVEL): head(nullptr), tail(nullptr)
   {
-    skiplist_node::MAX_LEVEL = MAX_LEVEL;
-    head = new skiplist_node();
-    tail = new skiplist_node();
+    skiplist_node<T>::MAX_LEVEL = MAX_LEVEL;
+    head = new skiplist_node<T>();
+    tail = new skiplist_node<T>();
     head->is_start_node = true;
     tail->is_end_node = true;
-    head->top_level = skiplist_node::MAX_LEVEL;
-    tail->top_level = skiplist_node::MAX_LEVEL;
-    for(node* pred = *head->preds; pred < *head->preds+head->top_level;
-        pred++)
-      pred = nullptr;
-    for(node* succ = *head->succs; succ < *head->succs+head->top_level;
-        succ++)
-      succ = tail;
-    for(node* pred = *tail->preds; pred < *tail->preds+tail->top_level;
-        pred++)
-      pred = head;
-    for(node* succ = *tail->succs; succ < *tail->succs+tail->top_level;
-        succ++)
-      succ = nullptr;
+    head->top_level = skiplist_node<T>::MAX_LEVEL;
+    tail->top_level = skiplist_node<T>::MAX_LEVEL;
+    for(skiplist_node<T>** pred = head->preds;
+        pred < head->preds+head->top_level; pred++)
+      *pred = nullptr;
+    for(skiplist_node<T>** succ = head->succs;
+        succ < head->succs+head->top_level; succ++)
+      *succ = tail;
+    for(skiplist_node<T>** pred = tail->preds;
+        pred < tail->preds+tail->top_level; pred++)
+      *pred = head;
+    for(skiplist_node<T>** succ = tail->succs;
+        succ < tail->succs+tail->top_level; succ++)
+      *succ = nullptr;
   }
   ~skiplist_priority_queue()
   {
-    node* curr;
+    skiplist_node<T>* curr;
     while(head != nullptr)
     {
       curr = head->succs[0];
@@ -94,49 +95,40 @@ public:
       head = curr;
     }
   }
-  void push(T& data)
+  void push(const T& data)
   {
-    skiplist_node* node = new skiplist_node();
+    //TODO: This algorithm does not implement locks yet.
+    skiplist_node<T>* node = new skiplist_node<T>();
     node->data = data;
-    node->lock_node.lock();
-    node->top_level = rand() % skiplist_node::MAX_LEVEL;
-    int curr_level = node->top_level-1;
-    while(curr_level >= 0)
+    node->top_level = rand() % (skiplist_node<T>::MAX_LEVEL-1)+1;
+    skiplist_node<T>* curr = head;
+    skiplist_node<T>* next = nullptr;
+    int curr_level = curr->top_level-1;
+    do
     {
-      node->preds[curr_level] = head;
-      node->succs[curr_level] = head->succs[curr_level];
-      curr_level--;
-    }
-    node* curr = head;
-    curr->lock_node.lock();
-    node* next = head->succs[0];
-    next->lock_node.lock();
-    while(not next->is_end_node and node->data < next->data)
-    {
-      curr->lock_node.unlock();
-      curr = next;
-      next = *curr->succs+curr->top_level-1;
-      next->lock_node.lock();
-      curr_level = curr->top_level-1;
-      // TODO: Fix order of locks, and locking mechanism
-      while(next >= *curr->succs)
+      next = curr->succs[curr_level];
+      if(next->is_end_node or node->data > next->data)
       {
-        if(not next->is_end_node and node->data < next->data)
-          break;
-        else
-        {
-          node->preds[curr_level] = curr;
-          node->succs[curr_level] = next;
+        if(curr_level > 0)
           curr_level--;
-        }
-        next--;
+        else
+          break;
       }
-      while(curr_level >= 0)
+      else
       {
-        node->preds[curr_level] = curr;
-        node->succs[curr_level] = curr->succs[curr_level];
-        curr_level--;
+        curr = next;
+        curr_level = curr->top_level-1;
+        next = curr->succs[curr_level];
       }
+    }while(true);
+    curr_level = node->top_level;
+    while(curr_level > 0)
+    {
+      curr_level--;
+      node->preds[curr_level] = curr;
+      node->succs[curr_level] = next;
+      curr->succs[curr_level] = node;
+      next->preds[curr_level] = node;
     }
   }
   T& top()
@@ -146,7 +138,7 @@ public:
   void pop()
   {
     head->lock_node.lock();
-    node* temp = head->succs[0];
+    skiplist_node<T>* temp = head->succs[0];
     temp->lock_node.lock();
     for(size_t i = 0; i < temp->top_level; i++)
     {
@@ -162,4 +154,25 @@ public:
     temp->lock_node.unlock();
     delete temp;
   }
+  bool empty()
+  {
+    return head->succs[0]->is_end_node;
+  }
 };
+
+int main(int argc, char** argv)
+{
+  skiplist_priority_queue<int> pqueue(4);
+  pqueue.push(45);
+  pqueue.push(34);
+  pqueue.push(85);
+  pqueue.push(54);
+
+  while(not pqueue.empty())
+  {
+    cout << pqueue.top() << endl;
+    pqueue.pop();
+  }
+
+  return 0;
+}
