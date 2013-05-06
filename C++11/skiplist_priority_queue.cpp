@@ -70,20 +70,16 @@ public:
     tail = new skiplist_node<T>();
     head->is_start_node = true;
     tail->is_end_node = true;
-    head->top_level = skiplist_node<T>::MAX_LEVEL;
-    tail->top_level = skiplist_node<T>::MAX_LEVEL;
-    for(skiplist_node<T>** pred = head->preds;
-        pred < head->preds+head->top_level; pred++)
-      *pred = nullptr;
-    for(skiplist_node<T>** succ = head->succs;
-        succ < head->succs+head->top_level; succ++)
-      *succ = tail;
-    for(skiplist_node<T>** pred = tail->preds;
-        pred < tail->preds+tail->top_level; pred++)
-      *pred = head;
-    for(skiplist_node<T>** succ = tail->succs;
-        succ < tail->succs+tail->top_level; succ++)
-      *succ = nullptr;
+    head->top_level = MAX_LEVEL;
+    tail->top_level = MAX_LEVEL;
+    for(size_t i = 0; i < MAX_LEVEL; i++)
+      head->preds[i] = nullptr;
+    for(size_t i = 0; i < MAX_LEVEL; i++)
+      head->succs[i] = tail;
+    for(size_t i = 0; i < MAX_LEVEL; i++)
+      tail->preds[i] = head;
+    for(size_t i = 0; i < MAX_LEVEL; i++)
+      tail->succs[i] = nullptr;
   }
   ~skiplist_priority_queue()
   {
@@ -100,35 +96,41 @@ public:
     //TODO: This algorithm does not implement locks yet.
     skiplist_node<T>* node = new skiplist_node<T>();
     node->data = data;
-    node->top_level = rand() % (skiplist_node<T>::MAX_LEVEL-1)+1;
+    node->top_level = (rand()%(skiplist_node<T>::MAX_LEVEL-1))+1;
     skiplist_node<T>* curr = head;
     skiplist_node<T>* next = nullptr;
     int curr_level = curr->top_level-1;
-    do
+    while(true)
     {
       next = curr->succs[curr_level];
       if(next->is_end_node or node->data > next->data)
       {
         if(curr_level > 0)
+        {
+          node->succs[curr_level] = next;
+          node->preds[curr_level] = curr;
           curr_level--;
+        }
         else
+        {
+          node->succs[0] = next;
+          node->preds[0] = curr;
           break;
+        }
       }
       else
       {
         curr = next;
         curr_level = curr->top_level-1;
-        next = curr->succs[curr_level];
+//        next = curr->succs[curr_level];
       }
-    }while(true);
+    }
     curr_level = node->top_level;
     while(curr_level > 0)
     {
       curr_level--;
-      node->preds[curr_level] = curr;
-      node->succs[curr_level] = next;
       curr->succs[curr_level] = node;
-      next->preds[curr_level] = node;
+      curr->succs[curr_level]->preds[curr_level] = node;
     }
   }
   T& top()
@@ -137,21 +139,23 @@ public:
   }
   void pop()
   {
-    head->lock_node.lock();
+    if(head->succs[0]->is_end_node)
+      return;
+//    head->lock_node.lock();
     skiplist_node<T>* temp = head->succs[0];
-    temp->lock_node.lock();
+//    temp->lock_node.lock();
     for(size_t i = 0; i < temp->top_level; i++)
     {
-      temp->succs[i]->lock_node.lock();
+//      temp->succs[i]->lock_node.lock();
       head->succs[i] = temp->succs[i];
-      head->succs[i]->preds[i] = head;
+      temp->succs[i]->preds[i] = head;
     }
-    head->lock_node.unlock();
-    for(size_t i = 0; i < temp->top_level; i++)
-    {
-      temp->succs[i]->lock_node.unlock();
-    }
-    temp->lock_node.unlock();
+//    head->lock_node.unlock();
+//    for(size_t i = 0; i < temp->top_level; i++)
+//    {
+//      temp->succs[i]->lock_node.unlock();
+//    }
+//    temp->lock_node.unlock();
     delete temp;
   }
   bool empty()
@@ -162,17 +166,67 @@ public:
 
 int main(int argc, char** argv)
 {
-  skiplist_priority_queue<int> pqueue(4);
-  pqueue.push(45);
-  pqueue.push(34);
-  pqueue.push(85);
-  pqueue.push(54);
+  skiplist_priority_queue<int> pqueue(50);
+  priority_queue<int> pqueue_bl;
 
-  while(not pqueue.empty())
+  chrono::steady_clock::time_point start, end;
+  chrono::duration<double> time_span_cumulative_sl =
+    chrono::duration<double>::zero();
+  chrono::duration<double> time_span_cumulative_pq =
+    chrono::duration<double>::zero();
+
+  int array[100000];
+  for(int i = 0; i < 10; i++)
   {
-    cout << pqueue.top() << endl;
-    pqueue.pop();
+    for(int j = 0; j < 100000; j++)
+    {
+      array[j] = rand();
+    }
+    start = chrono::steady_clock::now();
+    for(int j = 0; j < 100000; j++)
+    {
+      pqueue.push(array[j]);
+    }
+    end = chrono::steady_clock::now();
+    time_span_cumulative_sl +=
+      chrono::duration_cast<chrono::duration<double>>(end-start);
+
+    start = chrono::steady_clock::now();
+    for(int j = 0; j < 100000; j++)
+    {
+      pqueue_bl.push(array[j]);
+    }
+    end = chrono::steady_clock::now();
+    time_span_cumulative_pq +=
+      chrono::duration_cast<chrono::duration<double>>(end-start);
+
+    for(int j = 0; j < 100000; j++)
+    {
+      if(pqueue.empty())
+      {
+        cerr << "Something went wrong. pqueue empty at " << j << endl;
+        return EXIT_FAILURE;
+      }
+      if(pqueue_bl.empty())
+      {
+        cerr << "Something went wrong. pqueue_bl empty at " << j << endl;
+        return EXIT_FAILURE;
+      }
+      if(pqueue.top() != pqueue_bl.top())
+      {
+        cerr << "skiplist implementation failed." << endl;
+        cerr << pqueue.top() << " != " << pqueue_bl.top() << endl;
+        return EXIT_FAILURE;
+      }
+      pqueue.pop();
+      pqueue_bl.pop();
+    }
   }
+
+  cout << "My skiplist implementation took "
+       << time_span_cumulative_sl.count()/10 << " seconds" << endl
+       << "The STL implementation took "
+       << time_span_cumulative_pq.count()/10 << " seconds" << endl;
 
   return 0;
 }
