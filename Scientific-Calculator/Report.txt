@@ -1,0 +1,275 @@
+TITLE: SCIENTIFIC CALCULATOR AND MATHEMATICAL EXPRESSION INTERPRETER
+
+AUTHORS: SKAND HURKAT, RUSHABH SHAH, KUMARDHRUV SONI, INDRASEN BHATTACHARYA
+
+ALGORITHM AND EXPLANATION:
+
+The format in which we generally write expressions is known as the
+algebraic or infix form. eg: 4* (6+ 2) -3^2/9
+
+But this format is difficult to read by the computer because it must know
+the rules of precedence for executing it. Thus, I decided to convert the
+expression to postfix form which can be easily read and handled. For
+converting into postfix form, follow the following algorithm: (note - the
+input to the algorithm is the infix string and the output is the postfix
+string.  Doing this is a common way to execute a string of mathematical
+symbols.)
+
+0. Begin
+
+1. Initialise an empty stack which will contain operators( like +, - , *,
+etc)
+
+2. Scan the infix string from left to right: a. If the scanned character is
+an operand, add it to the postfix string.  b. If the scanned character is
+an operator(except right bracket), and the stack is empty, then push the
+scanned character to the top of the stack. If the stack is not empty, then
+compare the precedence of the given character with that of the character at
+the top of the stack. If the given character's precedence is higher, then
+push it onto the stack, else pop characters from the stack and append to
+the string, till the precedence of the given character exceeds that at the
+top of the stack or the stack is empty and then push it onto the top of the
+stack. If a left bracket is encountered at top stack then just push the
+given character to the top of the stack - INSPITE OF THE FACT THAT BRACKETS
+CONVENTIONALLY HAVE HIGHEST PRECEDENCE. If the given character is ( then
+just push it!!  c. If the scanned character is a right bracket, then pop
+stack and add each popped character to the end of the postfix, till a left
+bracket is encountered. Remove left bracket from stack and DO NOT ADD IT TO
+THE POSTFIX!! If a left bracket is not encountered then flag an error -
+bracket mismatch!
+ 
+3. Repeat step 2 till all characters are scanned.
+
+4. If the operator stack now still contains a left bracket, then flag an
+error. Else, pop elements from the stack one by one and append to the
+string.
+
+5. End
+
+Let me show you how this would work on the input: 4 * ( 6 + 2 ) - 3 ^ 2 / 9
+
+Scanned Character           Operator Stack          Postfix expression
+4                                                   4
+*                           *                       4
+(                           ( *                     4
+6                           ( *                     4 6
++                           + ( *                   4 6
+2                           + ( *                   4 6 2
+)                           *                       4 6 2 +
+-                           -                       4 6 2 + *
+3                           -                       4 6 2 + * 3
+^                           ^ -                     4 6 2 + * 3
+2                           ^ -                     4 6 2 + * 3 2
+/                           / -                     4 6 2 + * 3 2 ^
+9                           / -                     4 6 2 + * 3 2 ^ 9
+                                                    4 6 2 + * 3 2 ^ 9 / -
+NB: The top of the stack is to the left!!
+
+Note that the postfix expression can't have brackets - IT DOESNT NEED THEM!!
+
+Now that we have a postfix string, the algorithm to evaluate the seemingly
+senseless: 
+4 6 2 + * 3 2 ^ 9 / - = ? is actually quite simple:
+
+0. Begin
+
+1. Initialise an empty stack which will store operands(the numbers)
+
+2. Scan the postfix expression from left to right.
+  a. If the scanned character is an operand then push it onto the operand
+     stack.
+  b. If the scanned character is an operator then pop an appropriate number
+     of operands from the top of the stack, evaluate the operation with the
+     given operator and pop the result back onto the top of the stack.
+For instance if you encounter a ^ and the top of the stack is 2 5 ....,
+then pop 5(=base) and 2(=exponent), evaluate 5^2(=25) and push it onto the
+top of the stack: 25 ...., or if you encounter ! and top of stack is 4...,
+just pop 4, evaluate 4!(=24) and push it onto the top of the stack.
+
+3. Repeat 2. till all characters are scanned.
+
+4. The 'operand' remaining in the operand stack is the final result!!
+
+NB: If we display top stack at every iteration, this exactly mimimics the
+behaviour of the Windows Calculator display screen -voila!
+
+Let us execute the algo for 4 6 2 + * 3 2 ^ 9 / -
+
+Scanned char    Operand Stack   Display(Calculator Screen)
+4               4               4
+6               6 4             6
+2               2 6 4           2
++               8 4             8
+*               32              32
+3               3 32            3
+2               2 3 32          2
+^               9 32            9
+9               9 9 32          9
+/               1 32            1
+-               31              31
+ Answer: 31 !!!
+ 
+   
+Now, let us see how this is related to our project: we just have to
+maintain a postfix string simultaneously evaluating it - that is implement
+both algorithms together. That is what is shown on the example. It is self
+evident
+
+Please note that we have modified the algorithm to be used such that the
+postfix string is not actually created and the whole process is
+accomplished dynamically. We use only a single character and that character
+is used in an appropriate manner.
+
+See the dry run below:
+
+Input(infix) String       Input Stack(Operators)     Output(postfix) String         Output Stack(Operands)    Display    Comments
+(                         (                                                                                               
+2                         (                          2                              2                         2
++                         + (                        2                              2                         2
+(                         ( + (                      2                              2                         2
+7                         ( + (                      2 7                            7 2                       7
+*                         * ( + (                    2 7                            7 2                       7
+4                         * ( + (                    2 7 4                          4 7 2                     4
+-                         - ( + (                    2 7 4 *                        28 2                      28
+(                         ( - ( + (                  2 7 4 *                        28 2                      28
+100                       ( - ( + (                  2 7 4 * 100                    100 28 2                  100
+/                         / ( - ( + (                2 7 4 * 100                    100 28 2                  100
+5                         / ( - ( + (                2 7 4 * 100 5                  5 100 28 2                5
+^                         ^ / ( - ( + (              2 7 4 * 100 5                  5 100 28 2                5
+2                         ^ / ( - ( + (              2 7 4 * 100 5 2                2 5 100 28 2              2
+)                         - ( + (                    2 7 4 * 100 5 2 ^ /            4 28 2                    4
+*                         * - ( + (                  2 7 4 * 100 5 2 ^ /            4 28 2                    4
+3                         * - ( + (                  2 7 4 * 100 5 2 ^ / 3          3 4 28 2                  3
+)                         + (                        2 7 4 * 100 5 2 ^ / 3 * -      16 2                      16
+*                         * + (                      2 7 4 * 100 5 2 ^ / 3 * -      16 2                      16
+2                         * + (                      2 7 4 * 100 5 2 ^ / 3 * - 2    2 16 2                    2
+)                                                    2 7 4 * 100 5 2 ^ / 3 * - 2    34                        34
+
+
+Note then, that it is not necessary to save the entire postfix string -
+only the two stacks have to be used correctly.Then, if we run the two
+algoritms simultaneously, that is we create the stacks and process them in
+the same loop, then we should have a good enough algorithm to model the
+windows calculator.
+
+
+So, finally these are examples of how our program works, using only the
+required stacks:
+
+5+7*2
+
+operator	operand
+		5
++		5
++		7 5
+* +		7 5
+* +		2 7 5
++		14 5
+null		19
+
+5+7*2sin=
+
+		5
++		5
++		7 5
+* +		7 5
+* + 		2 7 5
+* +		0.034899496702500971645995181625333 7 5
++		0.24429647691750680152196627137733 5
+null		5.24429647691750680152196627137733
+
+5+(2+3)^2=
+
+		5
++		5
+( +		5
+( + 		2 5
++ ( +		2 5
++ ( +		3 2 5
+( +		5 5
++		5 5
+^ +		5 5
+^ +		2 5 5
++		25 5
+null		30
+
+5+10/5*2
+
+		5
++		5
++		10 5
+/ +		10 5
+/ +		5 10 5
+* +		2 5
+* +		2 2 5
++		4 5
+null		9
+
+5+10/5*2^4-2 
+
+		5
++		5
++		10 5
+/ +		10 5
+/ +		5 10 5
+* +		2 5
+* +		2 2 5
+^ * +		2 2 5
+^ * +		4 2 2 5
+* +		16 2 5
++		32 5
+-		37
+-		2 37
+null		35
+
+ 
+The main idea of our program is to INTERPRET mathematical expressions in
+the way that human beings do. It also interacts with the user in a
+comfortable and expected manner. Thus, we have achieved our optimistic
+goal.
+
+SOME HELPFUL INSTRUCTIONS
+
+This program follows the BODMAS rule for evaluating the expressions given
+to it.
+
+A list of keyboard shortcuts is as follows:
+
+inv i
+AC ESC
+sin s
+cos c
+tan t
+x^y ^
+ln l
+log L
++/- ~
+Off o
+
+Rules:
+1) Enter the value of operand before using operators like sin, cos, log etc.
+eg If you want to calculate sin(5+3) the input order should be
+5>+>3>=>sin
+If you want 5+sin3
+5>+>3>sin>=
+
+2) Enter an operator before '('.
+
+
+Some sample operations are shown below:
+
+1+2*5/6		2.666667		1>+>2>*>5>/>6>=
+1+(2+5)/7	2.000000		1>+>(>2>+>5>)>/>7>=
+1+sin(3+5*2)	1.420167		1>+>(>3>+>5>*>2>)>sin(s)>=
+
+
+COMPILE: g++ ScientificCalculator.cpp -lncursors
+
+CONTRIBUTIONS:
+
+Graphic User Interface - Skand Hurkat and Rushabh Shah
+Coding - Skand Hurkat
+Debugging - Skand Hurkat
+Algorithm - Indrasen Bhattacharya
+Comments - Kumardhruv Soni and Indrasen Bhattacharya
+Report - Rushabh Shah and Indrasen Bhattacharya
