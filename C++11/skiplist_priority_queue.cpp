@@ -99,33 +99,29 @@ public:
     node->top_level = (rand()%(skiplist_node<T>::MAX_LEVEL-1))+1;
     skiplist_node<T>* curr = head;
     skiplist_node<T>* next = nullptr;
-    int curr_level = curr->top_level-1;
-    while(true)
+    for(int curr_level = skiplist_node<T>::MAX_LEVEL-1;
+            curr_level >= 0;
+            curr_level--)
     {
-      next = curr->succs[curr_level];
-      if(next->is_end_node or node->data > next->data)
+      while(true)
       {
-        if(curr_level > 0)
+        next = curr->succs[curr_level];
+        if(next->is_end_node or node->data > next->data)
         {
-          node->succs[curr_level] = next;
-          node->preds[curr_level] = curr;
-          curr_level--;
+          if(curr_level < node->top_level)
+          {
+            node->preds[curr_level] = curr;
+            node->succs[curr_level] = next;
+          }
+          break;
         }
         else
         {
-          node->succs[0] = next;
-          node->preds[0] = curr;
-          break;
+          curr = next;
         }
       }
-      else
-      {
-        curr = next;
-        curr_level = curr->top_level-1;
-//        next = curr->succs[curr_level];
-      }
     }
-    curr_level = node->top_level;
+    int curr_level = node->top_level;
     while(curr_level > 0)
     {
       curr_level--;
