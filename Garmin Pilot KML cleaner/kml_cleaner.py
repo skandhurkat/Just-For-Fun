@@ -44,7 +44,8 @@ if __name__ == "__main__":
 
     # Correct the roll
     for roll in kml_root.iter("{http://www.opengis.net/kml/2.2}roll"):
-        roll.text = str(float(roll.text) + args.roll_correction)
+        # Garmin pilot flips the roll as required by KML, apparently
+        roll.text = str(-(float(roll.text) + args.roll_correction))
     # Correct the tilt
     for tilt in kml_root.iter("{http://www.opengis.net/kml/2.2}tilt"):
         tilt.text = str(float(tilt.text) + args.tilt_correction)
